@@ -1,7 +1,11 @@
+import opennlp.tools.chunker.ChunkerME;
+import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.langdetect.Language;
 import opennlp.tools.langdetect.LanguageDetectorME;
 import opennlp.tools.langdetect.LanguageDetectorModel;
 import opennlp.tools.lemmatizer.DictionaryLemmatizer;
+import opennlp.tools.namefind.NameFinderME;
+import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.sentdetect.SentenceDetectorME;
@@ -9,12 +13,13 @@ import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.stemmer.PorterStemmer;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
+import opennlp.tools.tokenize.WhitespaceTokenizer;
+import opennlp.tools.util.Span;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class OpenNLP {
@@ -26,8 +31,8 @@ public class OpenNLP {
     private static String PART_OF_SPEECH_MODEL = "resources/models/en-pos-maxent.bin";
     private static String CHUNKER_MODEL = "resources/models/en-chunker.bin";
     private static String LEMMATIZER_DICT = "resources/models/en-lemmatizer.dict";
-    private static String NAME_MODEL = "resources/models/en-ner-person.bin";
-    private static String ENTITY_XXX_MODEL = "resources/models/en-ner-xyz.bin";
+    private static String NAME_FINDER_MODEL = "resources/models/en-ner-person.bin";
+    private static String ENTITY_XXX_MODEL = "resources/models/en-ner-xxx.bin";
 
 	public static void main(String[] args) throws IOException {
 		OpenNLP openNLP = new OpenNLP();
@@ -42,8 +47,8 @@ public class OpenNLP {
         partOfSpeechTagging();
         lemmatization();
         stemming();
-		// chunking();
-		// nameFinding();
+        chunking();
+        nameFinding();
 	}
 
 	private void languageDetection() throws IOException {
@@ -185,29 +190,54 @@ public class OpenNLP {
         System.out.println(Arrays.toString(stemmedWords.toArray()));
 	}
 	
-	private void chunking() throws IOException
-    {
-		String[] sentence = new String[0];
-		sentence = new String[] { "She", "put", "the", "big", "knives", "on", "the", "table" };
+	private void chunking() throws IOException {
+        System.out.println("Chunker");
 
-		String[] tags = new String[0];
-		tags = new String[] { "PRP", "VBD", "DT", "JJ", "NNS", "IN", "DT", "NN" };
+        File modelFile = new File(CHUNKER_MODEL);
+        ChunkerModel model = new ChunkerModel(modelFile);
+        ChunkerME chunker = new ChunkerME(model);
 
+        String[] sentence = { "She", "put", "the", "big", "knives", "on", "the", "table" };
+        String[] tags = getPartOfSpeechTags(sentence);
+
+        String[] chunks = chunker.chunk(sentence, tags);
+        System.out.println(Arrays.toString(sentence));
+        System.out.println(Arrays.toString(chunks));
 	}
 
-	private void nameFinding() throws IOException
-    {
-		String text = "he idea of using computers to search for relevant pieces of information was popularized in the article "
-				+ "As We May Think by Vannevar Bush in 1945. It would appear that Bush was inspired by patents "
-				+ "for a 'statistical machine' - filed by Emanuel Goldberg in the 1920s and '30s - that searched for documents stored on film. "
-				+ "The first description of a computer searching for information was described by Holmstrom in 1948, "
-				+ "detailing an early mention of the Univac computer. Automated information retrieval systems were introduced in the 1950s: "
-				+ "one even featured in the 1957 romantic comedy, Desk Set. In the 1960s, the first large information retrieval research group "
-				+ "was formed by Gerard Salton at Cornell. By the 1970s several different retrieval techniques had been shown to perform "
-				+ "well on small text corpora such as the Cranfield collection (several thousand documents). Large-scale retrieval systems, "
-				+ "such as the Lockheed Dialog system, came into use early in the 1970s.";
+	private void nameFinding() throws IOException {
+        System.out.println("Name finder");
 
+        nameFindByModel(NAME_FINDER_MODEL);
+        nameFindByModel(ENTITY_XXX_MODEL);
 	}
+
+	private void nameFindByModel(String modelFilePath) throws IOException {
+        File modelFile = new File(modelFilePath);
+        TokenNameFinderModel model = new TokenNameFinderModel(modelFile);
+        NameFinderME nameFinder = new NameFinderME(model);
+
+        String text = "The idea of using computers to search for relevant pieces of information was popularized in the article "
+                + "As We May Think by Vannevar Bush in 1945. It would appear that Bush was inspired by patents "
+                + "for a 'statistical machine' - filed by Emanuel Goldberg in the 1920s and '30s - that searched for documents stored on film. "
+                + "The first description of a computer searching for information was described by Holmstrom in 1948, "
+                + "detailing an early mention of the Univac computer. Automated information retrieval systems were introduced in the 1950s: "
+                + "one even featured in the 1957 romantic comedy, Desk Set. In the 1960s, the first large information retrieval research group "
+                + "was formed by Gerard Salton at Cornell. By the 1970s several different retrieval techniques had been shown to perform "
+                + "well on small text corpora such as the Cranfield collection (several thousand documents). Large-scale retrieval systems, "
+                + "such as the Lockheed Dialog system, came into use early in the 1970s.";
+
+        String[] tokens = WhitespaceTokenizer.INSTANCE.tokenize(text);
+        Span[] names = nameFinder.find(tokens);
+
+        System.out.println(text);
+        for (Span name: names) {
+            for (int i = name.getStart(); i < name.getEnd(); i++) {
+                System.out.printf("%s ", tokens[i]);
+            }
+            System.out.printf("- %s\n", name.getType());
+        }
+    }
 
     private String[] getPartOfSpeechTags(String[] sentence) throws IOException {
         File modelFile = new File(PART_OF_SPEECH_MODEL);
