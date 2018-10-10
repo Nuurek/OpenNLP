@@ -1,12 +1,12 @@
 import opennlp.tools.langdetect.Language;
 import opennlp.tools.langdetect.LanguageDetectorME;
 import opennlp.tools.langdetect.LanguageDetectorModel;
-import opennlp.tools.sentdetect.SentenceDetector;
+import opennlp.tools.postag.POSModel;
+import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
-import opennlp.tools.util.Span;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class OpenNLP {
     private static String ENGLISH_TOKENIZER_MODEL = "resources/models/en-token.bin";
     private static String GERMAN_TOKENIZER_MODEL = "resources/models/de-token.bin";
     private static String SENTENCE_MODEL = "resources/models/en-sent.bin";
-    private static String POS_MODEL = "resources/models/en-pos-maxent.bin";
+    private static String PART_OF_SPEECH_MODEL = "resources/models/en-pos-maxent.bin";
     private static String CHUNKER_MODEL = "resources/models/en-chunker.bin";
     private static String LEMMATIZER_DICT = "resources/models/en-lemmatizer.dict";
     private static String NAME_MODEL = "resources/models/en-ner-person.bin";
@@ -35,7 +35,7 @@ public class OpenNLP {
 		languageDetection();
         tokenization();
         sentenceDetection();
-		// posTagging();
+        partOfSpeechTagging();
 		// lemmatization();
 		// stemming();
 		// chunking();
@@ -131,13 +131,27 @@ public class OpenNLP {
         }
 	}
 
-	private void posTagging() throws IOException {
-		String[] sentence = new String[0];
-		sentence = new String[] { "Cats", "like", "milk" };
-		/*sentence = new String[]{"Cat", "is", "white", "like", "milk"};
-		sentence = new String[] { "Hi", "How", "are", "you", "Welcome", "to", "OpenNLP", "We", "provide", "multiple",
-				"built-in", "methods", "for", "Natural", "Language", "Processing" };
-		sentence = new String[] { "She", "put", "the", "big", "knives", "on", "the", "table" };*/
+	private void partOfSpeechTagging() throws IOException {
+        System.out.println("Part of speech tagging");
+
+        File modelFile = new File(PART_OF_SPEECH_MODEL);
+        POSModel model = new POSModel(modelFile);
+        POSTaggerME partOfSpeechTagger = new POSTaggerME(model);
+
+	    String[][] sentences = {
+            { "Cats", "like", "milk" },
+            { "Cat", "is", "white", "like", "milk" },
+            { "Hi", "How", "are", "you", "Welcome", "to", "OpenNLP", "We", "provide", "multiple",
+                "built-in", "methods", "for", "Natural", "Language", "Processing" },
+            { "She", "put", "the", "big", "knives", "on", "the", "table" }
+        };
+
+        for (String[] sentence: sentences) {
+            System.out.println(Arrays.toString(sentence));
+
+            String[] partOfSpeechTags = partOfSpeechTagger.tag(sentence);
+            System.out.println(Arrays.toString(partOfSpeechTags));
+        }
 	}
 
 	private void lemmatization() throws IOException
