@@ -1,11 +1,14 @@
+import opennlp.tools.langdetect.Language;
+import opennlp.tools.langdetect.LanguageDetectorME;
 import opennlp.tools.langdetect.LanguageDetectorModel;
 
 import java.io.File;
 import java.io.IOException;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class OpenNLP {
 
-    public static String LANG_DETECT_MODEL = "resources/models/langdetect-183.bin";
+    private static String LANG_DETECT_MODEL = "resources/models/langdetect-183.bin";
     public static String TOKENIZER_MODEL = "resources/models/en-token.bin";
     public static String SENTENCE_MODEL = "resources/models/en-sent.bin";
     public static String POS_MODEL = "resources/models/en-pos-maxent.bin";
@@ -20,7 +23,7 @@ public class OpenNLP {
 		openNLP.run();
 	}
 
-	public void run() throws IOException
+	private void run() throws IOException
     {
 
 		languageDetection();
@@ -37,25 +40,31 @@ public class OpenNLP {
     {
 		File modelFile = new File(LANG_DETECT_MODEL);
 		LanguageDetectorModel model = new LanguageDetectorModel(modelFile);
+        LanguageDetectorME detector = new LanguageDetectorME(model);
 
-		String text = "";
-		text = "cats";
-		// text = "cats like milk";
-		// text = "Many cats like milk because in some ways it reminds them of their
-		// mother's milk.";
-		// text = "The two things are not really related. Many cats like milk because in
-		// some ways it reminds them of their mother's milk.";
-		/*text = "The two things are not really related. Many cats like milk because in some ways it reminds them of their mother's milk. "
-				+ "It is rich in fat and protein. They like the taste. They like the consistency . "
-				+ "The issue as far as it being bad for them is the fact that cats often have difficulty digesting milk and so it may give them "
-				+ "digestive upset like diarrhea, bloating and gas. After all, cow's milk is meant for baby calves, not cats. "
-				+ "It is a fortunate quirk of nature that human digestive systems can also digest cow's milk. But humans and cats are not cows.";*/
-		// text = "Many cats like milk because in some ways it reminds them of their
-		// mother's milk. Le lait n'est pas forc�ment mauvais pour les chats";
-		// text = "Many cats like milk because in some ways it reminds them of their
-		// mother's milk. Le lait n'est pas forc�ment mauvais pour les chats. "
-		// + "Der Normalfall ist allerdings der, dass Salonl�wen Milch weder brauchen
-		// noch gut verdauen k�nnen.";
+		String[] texts = {
+                "cats",
+                "Many cats like milk because in some ways it reminds them of their mother's milk.",
+                "The two things are not really related. Many cats like milk because in "
+                + "some ways it reminds them of their mother's milk.",
+                "The two things are not really related. Many cats like milk because in some ways it reminds them of their mother's milk. "
+                + "It is rich in fat and protein. They like the taste. They like the consistency . "
+                + "The issue as far as it being bad for them is the fact that cats often have difficulty digesting milk and so it may give them "
+                + "digestive upset like diarrhea, bloating and gas. After all, cow's milk is meant for baby calves, not cats. "
+                + "It is a fortunate quirk of nature that human digestive systems can also digest cow's milk. But humans and cats are not cows.",
+                "Many cats like milk because in some ways it reminds them of their "
+                + "mother's milk. Le lait n'est pas forc�ment mauvais pour les chats",
+                "Many cats like milk because in some ways it reminds them of their "
+                + "mother's milk. Le lait n'est pas forc�ment mauvais pour les chats. "
+                + "Der Normalfall ist allerdings der, dass Salonl�wen Milch weder brauchen "
+                + "noch gut verdauen k�nnen."
+        };
+        for (String text: texts) {
+            System.out.println(text);
+
+            Language language = detector.predictLanguage(text);
+            System.out.printf("Language: %s, %.2f\n", language.getLang(), language.getConfidence());
+        }
 	}
 
 	private void tokenization() throws IOException
